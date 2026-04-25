@@ -1,0 +1,173 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>browser-form-autofiller</title>
+    <style>
+      body {
+        margin: 0;
+        padding: 14px;
+        width: 330px;
+        background: #0d1117;
+        color: #e6edf3;
+        font: 13px/1.4 "Segoe UI", sans-serif;
+      }
+      h1 {
+        margin: 0 0 4px;
+        font-size: 14px;
+      }
+      p {
+        margin: 0 0 12px;
+        color: #94a3b8;
+      }
+      .group {
+        margin-bottom: 10px;
+      }
+      label {
+        display: block;
+        margin-bottom: 4px;
+        font-size: 12px;
+        color: #cbd5e1;
+      }
+      input,
+      textarea {
+        width: 100%;
+        border-radius: 8px;
+        border: 1px solid #334155;
+        background: #020617;
+        color: #e2e8f0;
+        padding: 8px;
+        font: inherit;
+      }
+      textarea {
+        min-height: 64px;
+      }
+      button {
+        border: none;
+        border-radius: 8px;
+        padding: 9px 10px;
+        font-weight: 600;
+        cursor: pointer;
+      }
+      .primary {
+        width: 100%;
+        background: #0ea5e9;
+        color: #082f49;
+      }
+      .secondary {
+        width: 100%;
+        margin-top: 8px;
+        background: #1e293b;
+        color: #cbd5e1;
+      }
+      .status {
+        margin-top: 8px;
+        font-size: 12px;
+        color: #7dd3fc;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>browser-form-autofiller</h1>
+    <p>Save your default profile used by Smart Fill on any page.</p>
+
+    <div class="group">
+      <label for="name">Full name</label>
+      <input id="name" />
+    </div>
+    <div class="group">
+      <label for="email">Email</label>
+      <input id="email" type="email" />
+    </div>
+    <div class="group">
+      <label for="phone">Phone</label>
+      <input id="phone" />
+    </div>
+    <div class="group">
+      <label for="location">Location</label>
+      <input id="location" />
+    </div>
+    <div class="group">
+      <label for="headline">Headline</label>
+      <input id="headline" />
+    </div>
+    <div class="group">
+      <label for="summary">Summary</label>
+      <textarea id="summary"></textarea>
+    </div>
+    <div class="group">
+      <label for="linkedin">LinkedIn</label>
+      <input id="linkedin" />
+    </div>
+    <div class="group">
+      <label for="portfolio">Portfolio</label>
+      <input id="portfolio" />
+    </div>
+
+    <button id="save" class="primary">Save profile</button>
+    <button id="dashboard" class="secondary">Open dashboard</button>
+    <div id="status" class="status"></div>
+
+    <script>
+      const fields = [
+        "name",
+        "email",
+        "phone",
+        "location",
+        "headline",
+        "summary",
+        "linkedin",
+        "portfolio"
+      ];
+
+      async function loadProfile() {
+        const result = await chrome.storage.sync.get(["bfa_profile"]);
+        const profile = result.bfa_profile;
+        if (!profile) return;
+
+        document.getElementById("name").value = profile.name || "";
+        document.getElementById("email").value = profile.email || "";
+        document.getElementById("phone").value = profile.phone || "";
+        document.getElementById("location").value = profile.location || "";
+        document.getElementById("headline").value = profile.headline || "";
+        document.getElementById("summary").value = profile.summary || "";
+        document.getElementById("linkedin").value = profile.links?.linkedin || "";
+        document.getElementById("portfolio").value = profile.links?.portfolio || "";
+      }
+
+      function readFormProfile() {
+        return {
+          name: document.getElementById("name").value.trim(),
+          email: document.getElementById("email").value.trim(),
+          phone: document.getElementById("phone").value.trim(),
+          location: document.getElementById("location").value.trim(),
+          headline: document.getElementById("headline").value.trim(),
+          summary: document.getElementById("summary").value.trim(),
+          salaryExpectation: "",
+          availability: "",
+          customFields: [],
+          contextOverrides: {},
+          links: {
+            linkedin: document.getElementById("linkedin").value.trim(),
+            portfolio: document.getElementById("portfolio").value.trim(),
+            github: "",
+            website: document.getElementById("portfolio").value.trim()
+          }
+        };
+      }
+
+      document.getElementById("save").addEventListener("click", async () => {
+        const profile = readFormProfile();
+        await chrome.storage.sync.set({ bfa_profile: profile });
+        document.getElementById("status").textContent = "Profile saved for Smart Fill.";
+      });
+
+      document.getElementById("dashboard").addEventListener("click", async () => {
+        await chrome.runtime.sendMessage({ type: "OPEN_DASHBOARD" });
+      });
+
+      loadProfile();
+    </script>
+  </body>
+</html>
